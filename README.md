@@ -1,4 +1,4 @@
-# Prática da semana
+# Prática da semana - Calculadora de Bitcoin
 
 Bem-vindo a este projeto divertido e prático onde construiremos uma calculadora que converte Bitcoin em USD. Você aprenderá sobre como buscar dados de uma API, manipulação do DOM, e uso de localStorage, além de utilizar um pouco de matemática básica ao longo do caminho.
 
@@ -21,30 +21,30 @@ Comece escrevendo o HTML. A página deve conter essencialmente:
 ```html
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bitcoin Calculator</title>
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Bitcoin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
     <div class="container">
-      <h1>Bitcoin Calculator</h1>
-      <main id="main">
-        <p>
-          <span id="currentPrice">Preço mais recente:</span>
-          <b>$<span id="bitcoinPrice"></span> USD</b>
-        </p>
-        <label for="bitcoinAmount">Quanto Bitcoin você possui?</label>
-        <input type="number" id="bitcoinAmount" step="any" placeholder="0.05" />
-        <button id="calculateBtn">Calcular</button>
-        <br />
-        <br />
-        <h3 id="usdAmount"></h3>
-      </main>
+        <h1>Calculadora de Bitcoin</h1>
+        <main id="main">
+            <p>
+                <span id="precoAtual">Preço mais recente: </span>
+                <b>$<span id="precoBitcoin"></span> USD (Dólar)</b>
+            </p>
+            <label for="qtadeBitcoin">Quantos Bitcoins você possui?</label>
+            <input type="number" id="qtadeBitcoin" step="any" placeholder="0.05">
+            <button id="calcularBitcoin">Calcular</button>
+            <br/>
+            <br/>
+            <h3 id="qtadeUSD"></h3>
+        </main>
     </div>
     <script src="script.js"></script>
-  </body>
+</body>
 </html>
 ```
 
@@ -61,7 +61,7 @@ A próxima coisa a fazer é adicionar um event listener para chamar a API assim 
 ```javascript
   document.addEventListener("DOMContentLoaded", async () => {
   // Executa uma função assíncrona assim que o conteúdo do DOM for carregado
-  let bitcoinPrice; // Inicializa a variável
+  let precoBitcoin; // Inicializa a variável
 
   try {
     const response = await fetch(API_URL);
@@ -70,13 +70,13 @@ A próxima coisa a fazer é adicionar um event listener para chamar a API assim 
     const data = await response.json();
     // Aguarda o conteúdo JSON da resposta
 
-    bitcoinPrice = data.bpi.USD.rate_float.toFixed(2);
+    precoBitcoin = data.bpi.USD.rate_float.toFixed(2);
     // Atribui à variável bitcoinPrice o valor em USD do Bitcoin, arredondado para 2 casas decimais.
   } catch {
     console.log("erro!"); // Em caso de erro
   }
 
-  console.log(bitcoinPrice); // Exibe o preço no console
+  console.log(precoBitcoin); // Exibe o preço no console
 });
 ```
 
@@ -87,25 +87,28 @@ Fundamentalmente, o localStorage é um recurso presente na maioria dos navegador
 
 Vamos começar editando algumas linhas:
 ```javascript
-  document.addEventListener("DOMContentLoaded", async () => {
-  let bitcoinPrice = localStorage.getItem("lastBitcoinPrice");
-  // Recupera o último preço de Bitcoin armazenado no localStorage, se existir
-  // Nota: Deve ser nulo na primeira vez que você executar a página
+const API_URL = "https://api.coindesk.com/v1/bpi/currentprice.json";
 
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    bitcoinPrice = data.bpi.USD.rate_float.toFixed(2);
-    // bitcoinPrice será reescrito
-
-    localStorage.setItem("lastBitcoinPrice", bitcoinPrice);
-    // Salva o preço mais recente no localStorage
-  } catch {
-    console.log("erro!");
-  }
-
-  console.log(bitcoinPrice);
-});
+document.addEventListener("DOMContentLoaded", async () => {
+    // Executa uma função assíncrona assim que o conteúdo do DOM for carregado
+    let precoBitcoin = localStorage.getItem("precoBitcoin"); // Inicializa a variável
+  
+    try {
+      const response = await fetch(API_URL);
+      // Aguarda uma resposta da solicitação HTTP enviada à URL da API
+  
+      const data = await response.json();
+      // Aguarda o conteúdo JSON da resposta
+  
+      precoBitcoin = data.bpi.USD.rate_float.toFixed(2);
+      localStorage.setItem("precoBitcoin", precoBitcoin);
+      // Atribui à variável precoBitcoin o valor em USD do Bitcoin, arredondado para 2 casas decimais.
+    } catch {
+      console.log("erro!"); // Em caso de erro
+    }
+  
+    console.log(precoBitcoin); // Exibe o preço no console
+  });
 ```
 
 ## Como Implementar Manipulação do DOM
@@ -115,37 +118,39 @@ Neste projeto, usaremos o DOM para mostrar o preço atual do Bitcoin e o valor c
 
 Vamos implementar a manipulação do DOM:
 ```javascript
+const API_URL = "https://api.coindesk.com/v1/bpi/currentprice.json";
+
 document.addEventListener("DOMContentLoaded", async () => {
-  const main = document.getElementById("main");
-  const bitcoinPriceElement = document.getElementById("bitcoinPrice");
-  const bitcoinAmountInput = document.getElementById("bitcoinAmount");
-  const calculateBtn = document.getElementById("calculateBtn");
-  const usdAmountElement = document.getElementById("usdAmount");
-
-  let bitcoinPrice = localStorage.getItem("lastBitcoinPrice");
-
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    bitcoinPrice = data.bpi.USD.rate_float.toFixed(2);
-    localStorage.setItem("lastBitcoinPrice", bitcoinPrice);
-
-    bitcoinPriceElement.textContent = bitcoinPrice;
-    // Define o conteúdo de texto do elemento bitcoinPriceElement para o preço atual do bitcoinPrice
-  } catch {
-    if (bitcoinPrice) {
-      // Se houver um preço de Bitcoin existente no localStorage...
-      bitcoinPriceElement.textContent = bitcoinPrice;
-      // ...exibe o que está salvo no localStorage
-    } else {
-      main.innerHTML = "<p>Não foi possível buscar o preço do Bitcoin :(</p>";
-      return;
+    const main = document.getElementById("main");
+    const elementoPreco = document.getElementById("precoBitcoin");
+    const qtadeBitcoinInput = document.getElementById("qtadeBitcoin");
+    const btnCalcular = document.getElementById("calcularBitcoin");
+    const qtadeDolar = document.getElementById("qtadeUSD");
+    // Executa uma função assíncrona assim que o conteúdo do DOM for carregado
+    let precoBitcoin = localStorage.getItem("precoBitcoin"); // Inicializa a variável
+  
+    try {
+      const response = await fetch(API_URL);
+      // Aguarda uma resposta da solicitação HTTP enviada à URL da API
+  
+      const data = await response.json();
+      // Aguarda o conteúdo JSON da resposta
+  
+      precoBitcoin = data.bpi.USD.rate_float.toFixed(2);
+      localStorage.setItem("precoBitcoin", precoBitcoin);
+      // Atribui à variável precoBitcoin o valor em USD do Bitcoin, arredondado para 2 casas decimais.
+    } catch {
+      if(precoBitcoin) {
+        // Se houver um preço de bitcoin existente no localStorage
+        elementoPreco.textContent = precoBitcoin; // Exibe o que está salvo lá
+      }
+      else {
+        main.innerHTML = "<p>Não foi possível buscar o preço do bitcoin</p>"
+      }
     }
-  }
-
-  console.log(bitcoinPrice);
-});
-
+  
+    console.log(precoBitcoin); // Exibe o preço no console
+  });
 ```
 
 ## Como Calcular o Valor Atual da Carteira
@@ -155,50 +160,43 @@ Por exemplo, o preço atual do Bitcoin pode ser $60.000 USD. Se você possui 2 B
 
 Vamos obter a quantidade de Bitcoin que o usuário possui (bitcoinAmount) do localStorage.
 ```javascript
-// continue após console.log(bitcoinPrice);
+// continue após console.log(precoBitcoin);
 
-let bitcoinAmount = localStorage.getItem("bitcoinAmount");
+let qtadeBitcoin = localStorage.getItem("qtadeBitcoin");
 ```
 Calcule o valor em USD com esta função:
 
 ```javascript
-const calculateUSDAmount = () => {
-  bitcoinAmount = bitcoinAmountInput.value || 0;
-  // bitcoinAmount será reatribuído para o que estiver no input no front-end, caso contrário, seu valor padrão será zero
+const calcularMontanteUSD = () => {
+  qtadeBitcoin = qtadeBitcoinInput.value || 0;
+  // qtadeBitcoin será reatribuído para o que estiver no input no front-end, caso contrário, seu valor padrão será zero
 
-  const usdAmount = bitcoinAmount * bitcoinPrice;
+  const totalUSD = qtadeBitcoin * precoBitcoin;
   // Suponha que você tenha 2 Bitcoins e o preço seja 60000.
   // 2 * 60000 = 120000
 
-  usdAmountElement.innerHTML = `<b>$${usdAmount.toFixed(
+  qtadeDolar.innerHTML = `<b>$${totalUSD.toFixed(
     2
   )} USD</b> em Bitcoin.`;
   // Arredonde para as duas casas decimais mais próximas e exiba
 };
 ```
 
-Lembra quando pegamos bitcoinAmount do localStorage? Agora, quando a página carregar, vamos definir o valor do input no front-end como bitcoinAmount.
+Vamos verificar a existência de um valor inserido pelo usuário, e calcular em cima disso
 
 ```javascript
-if (bitcoinAmount) {
-  bitcoinAmountInput.value = bitcoinAmount;
-  // Define o valor do input para bitcoinAmount
-
-  calculateUSDAmount();
-  // Calcula e atualiza o front-end
-}
+if (qtadeBitcoinInput.value) {
+        calcularMontanteUSD()
+    }
 ```
 
 Para que o usuário atualize seu bitcoinAmount, vamos adicionar um event listener quando o botão calculateBtn for clicado:
 
 ```javascript
-calculateBtn.addEventListener("click", () => {
-  localStorage.setItem("bitcoinAmount", bitcoinAmountInput.value);
-  // Salva o valor do input no localStorage
-
-  calculateUSDAmount();
-  // Calcula e atualiza o front-end
-});
+btnCalcular.addEventListener("click", () => {
+        localStorage.setItem("qtadeBitcoin", qtadeBitcoinInput.value);
+        calcularMontanteUSD();
+    });
 ```
 
 Todo o JavaScript agora deve estar completo.
@@ -209,51 +207,63 @@ Seu código completo deve ser semelhante a este (além dos comentários e format
 const API_URL = "https://api.coindesk.com/v1/bpi/currentprice.json";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const main = document.getElementById("main");
-  const bitcoinPriceElement = document.getElementById("bitcoinPrice");
-  const bitcoinAmountInput = document.getElementById("bitcoinAmount");
-  const calculateBtn = document.getElementById("calculateBtn");
-  const usdAmountElement = document.getElementById("usdAmount");
+    let main = document.getElementById("main");
+    let elementoPreco = document.getElementById("precoBitcoin");
+    let qtadeBitcoinInput = document.getElementById("qtadeBitcoin");
+    let btnCalcular = document.getElementById("calcularBitcoin");
+    let qtadeDolar = document.getElementById("qtadeUSD");
+    // Executa uma função assíncrona assim que o conteúdo do DOM for carregado
+    let precoBitcoin = localStorage.getItem("precoBitcoin"); // Inicializa a variável
 
-  let bitcoinPrice = localStorage.getItem("lastBitcoinPrice");
+    try {
+        const response = await fetch(API_URL);
+        // Aguarda uma resposta da solicitação HTTP enviada à URL da API
 
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    bitcoinPrice = data.bpi.USD.rate_float.toFixed(2);
-    localStorage.setItem("lastBitcoinPrice", bitcoinPrice);
+        const data = await response.json();
+        // Aguarda o conteúdo JSON da resposta
 
-    bitcoinPriceElement.textContent = bitcoinPrice;
-  } catch {
-    if (bitcoinPrice) {
-      bitcoinPriceElement.textContent = bitcoinPrice;
-    } else {
-      main.innerHTML = "<p>Não foi possível buscar o preço do Bitcoin :(</p>";
-      return;
+        precoBitcoin = data.bpi.USD.rate_float.toFixed(2);
+        localStorage.setItem("precoBitcoin", precoBitcoin);
+        // Atribui à variável precoBitcoin o valor em USD do Bitcoin, arredondado para 2 casas decimais.
+    } catch {
+        if (precoBitcoin) {
+            // Se houver um preço de bitcoin existente no localStorage
+            elementoPreco.textContent = precoBitcoin; // Exibe o que está salvo lá
+        }
+        else {
+            main.innerHTML = "<p>Não foi possível buscar o preço do bitcoin</p>"
+        }
     }
-  }
 
-  let bitcoinAmount = localStorage.getItem("bitcoinAmount");
+    console.log(precoBitcoin); // Exibe o preço no console
 
-  const calculateUSDAmount = () => {
-    bitcoinAmount = bitcoinAmountInput.value || 0;
+    qtadeBitcoin = localStorage.getItem("qtadeBitcoin");
 
-    const usdAmount = bitcoinAmount * bitcoinPrice;
-    usdAmountElement.innerHTML = `<b>$${usdAmount.toFixed(
-      2
-    )} USD</b> em Bitcoin.`;
-  };
+    const calcularMontanteUSD = () => {
+        qtadeBitcoin = parseFloat(qtadeBitcoinInput.value) || 0;
+        // qtadeBitcoin será reatribuído para o que estiver no input no front-end, caso contrário, seu valor padrão será zero
 
-  if (bitcoinAmount) {
-    bitcoinAmountInput.value = bitcoinAmount;
-    calculateUSDAmount();
-  }
+        const totalUSD = qtadeBitcoin * precoBitcoin;
+        // Suponha que você tenha 2 Bitcoins e o preço seja 60000.
+        // 2 * 60000 = 120000
 
-  calculateBtn.addEventListener("click", () => {
-    localStorage.setItem("bitcoinAmount", bitcoinAmountInput.value);
-    calculateUSDAmount();
-  });
+        qtadeDolar.innerHTML = `<b>$${totalUSD.toFixed(
+            2
+        )} USD</b> em Bitcoin.`;
+        // Arredonde para as duas casas decimais mais próximas e exiba
+    };
+
+    if (qtadeBitcoinInput.value) {
+        calcularMontanteUSD()
+    }
+
+    btnCalcular.addEventListener("click", () => {
+        localStorage.setItem("qtadeBitcoin", qtadeBitcoinInput.value);
+        calcularMontanteUSD();
+    });
 });
+
+
 ```
 
 Com isso, sua calculadora estará pronta! Agora, teste a página em seu navegador e verifique se tudo está funcionando como esperado.
